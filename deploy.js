@@ -15,7 +15,7 @@ function main() {
 function installPM2() {
   return ssh.execCommand(
     'sudo npm install pm2 -g', {
-      cwd: '/home/ubuntu'
+    cwd: '/home/ubuntu'
   });
 }
 
@@ -27,13 +27,13 @@ function transferProjectToRemote(failed, successful) {
     {
       recursive: true,
       concurrency: 1,
-      validate: function(itemPath) {
+      validate: function (itemPath) {
         const baseName = path.basename(itemPath);
         return (
           baseName.substr(0, 1) !== '.' && baseName !== 'node_modules' // do not allow dot files
         ); // do not allow node_modules
       },
-      tick: function(localPath, remotePath, error) {
+      tick: function (localPath, remotePath, error) {
         if (error) {
           failed.push(localPath);
           console.log('failed.push: ' + localPath);
@@ -50,7 +50,7 @@ function transferProjectToRemote(failed, successful) {
 function createRemoteTempFolder() {
   return ssh.execCommand(
     'rm -rf todo-list-temp && mkdir todo-list-temp', {
-      cwd: '/home/ubuntu'
+    cwd: '/home/ubuntu'
   });
 }
 
@@ -58,7 +58,7 @@ function createRemoteTempFolder() {
 function stopRemoteServices() {
   return ssh.execCommand(
     'pm2 stop all && sudo service mongod stop', {
-      cwd: '/home/ubuntu'
+    cwd: '/home/ubuntu'
   });
 }
 
@@ -66,7 +66,7 @@ function stopRemoteServices() {
 function updateRemoteApp() {
   return ssh.execCommand(
     'mkdir todo-list && cp -r todo-list-temp/* todo-list/ && rm -rf todo-list-temp', {
-      cwd: '/home/ubuntu'
+    cwd: '/home/ubuntu'
   });
 }
 
@@ -74,7 +74,7 @@ function updateRemoteApp() {
 function restartRemoteServices() {
   return ssh.execCommand(
     'cd todo-list && sudo service mongod start && pm2 start app.js', {
-      cwd: '/home/ubuntu'
+    cwd: '/home/ubuntu'
   });
 }
 
@@ -85,20 +85,20 @@ function sshConnect() {
   ssh
     .connect({
       // TODO: ADD YOUR IP ADDRESS BELOW (e.g. '12.34.5.67')
-      host: 'ec2-3-17-177-120.us-east-2.compute.amazonaws.com',
+      host: '3.17.177.120',
       username: 'ubuntu',
       privateKey: 'todo-list.pem'
     })
-    .then(function() {
+    .then(function () {
       console.log('SSH Connection established.');
       console.log('Installing PM2...');
       return installPM2();
     })
-    .then(function() {
+    .then(function () {
       console.log('Creating `todo-list-temp` folder.');
       return createRemoteTempFolder();
     })
-    .then(function(result) {
+    .then(function (result) {
       const failed = [];
       const successful = [];
       if (result.stdout) {
@@ -111,7 +111,7 @@ function sshConnect() {
       console.log('Transferring files to remote server...');
       return transferProjectToRemote(failed, successful);
     })
-    .then(function(status) {
+    .then(function (status) {
       if (status) {
         console.log('Stopping remote services.');
         return stopRemoteServices();
@@ -119,7 +119,7 @@ function sshConnect() {
         return Promise.reject(failed.join(', '));
       }
     })
-    .then(function(status) {
+    .then(function (status) {
       if (status) {
         console.log('Updating remote app.');
         return updateRemoteApp();
@@ -127,7 +127,7 @@ function sshConnect() {
         return Promise.reject(failed.join(', '));
       }
     })
-    .then(function(status) {
+    .then(function (status) {
       if (status) {
         console.log('Restarting remote services...');
         return restartRemoteServices();
@@ -135,7 +135,7 @@ function sshConnect() {
         return Promise.reject(failed.join(', '));
       }
     })
-    .then(function() {
+    .then(function () {
       console.log('DEPLOYMENT COMPLETE!');
       process.exit(0);
     })
